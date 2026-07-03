@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Productivity Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>My Productivity Dashboard</h1>
+        <h2 id="greeting"></h2>
+        <h3 id="date"></h3>
+        <button id="themeToggle">🌙</button>
+    </header>
+
+    <main>
+        <section id="tasks">
+            <h2>Tasks</h2>
+
+            <div class="task-input">
+                <input type="text" id="taskInput" placeholder="Enter a task...">
+                <button id="addTaskBtn">Add</button>
+            </div>
+
+            <ul id="taskList">
+
+            </ul>
+        </section>
+
+        <section id="stats">
+            <h2>Stats</h2>
+            <div class="stats-container">
+                <div class="card">
+                    <h3>Total</h3>
+                    <p id="totalTasks">0</p>
+                </div>
+                <div class="card">
+                    <h3>Done</h3>
+                    <p id="completedTasks">0</p>
+                </div>
+                <div class="card">
+                    <h3>Progress</h3>
+                    <p id="progressPercent">0%</p>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div id="progressFill"></div>
+            </div>
+        </section>
+
+        <section id="widgets">
+            <h2>Widgets</h2>
+            <div id="weatherBox">
+                <p id="weatherText">Loading weather...</p>
+            </div>
+        </section>
+    </main>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
