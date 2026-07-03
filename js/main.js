@@ -1,7 +1,7 @@
 import { loadTasks } from "./storage.js";
 import { tasks, setTasks, addTask, toggleTask, deleteTask } from "./taskManager.js";
 import { getStats } from "./stats.js";
-import { getWeather } from "./api.js";
+import { getWeather } from "./weather.js";
 
 // DOM elements
 const taskInput = document.getElementById("taskInput");
