@@ -1,62 +1,116 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Productivity Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A responsive personal productivity dashboard built with HTML, CSS, JavaScript and LocalStorage.">
+    <title>Personal Productivity Dashboard</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+    <header class="header">
+        <div class="header-content">
+            <div>
+                <p class="eyebrow">PERSONAL PRODUCTIVITY</p>
+                <h1>Productivity Dashboard</h1>
+                <p id="greeting" class="greeting">Hello</p>
+                <p id="date" class="date"></p>
+            </div>
 
-    <header>
-        <h1>My Productivity Dashboard</h1>
-        <h2 id="greeting"></h2>
-        <h3 id="date"></h3>
-        <button id="themeToggle">🌙</button>
+            <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
+                🌙
+            </button>
+        </div>
     </header>
 
-    <main>
-        <section id="tasks">
-            <h2>Tasks</h2>
-
-            <div class="task-input">
-                <input type="text" id="taskInput" placeholder="Enter a task...">
-                <button id="addTaskBtn">Add</button>
+    <main class="dashboard">
+        <section class="panel tasks-panel" aria-labelledby="tasksTitle">
+            <div class="section-heading">
+                <div>
+                    <p class="section-label">TASK MANAGEMENT</p>
+                    <h2 id="tasksTitle">Today's Tasks</h2>
+                </div>
+                <span id="taskCountLabel" class="task-count">0 tasks</span>
             </div>
 
-            <ul id="taskList">
+            <form id="taskForm" class="task-input">
+                <label for="taskInput" class="sr-only">Enter a task</label>
+                <input
+                    type="text"
+                    id="taskInput"
+                    placeholder="Enter a task..."
+                    maxlength="100"
+                    autocomplete="off"
+                >
+                <button id="addTaskBtn" type="submit">Add Task</button>
+            </form>
 
-            </ul>
+            <div class="task-toolbar">
+                <div class="filters" role="group" aria-label="Task filters">
+                    <button class="filter-btn active" type="button" data-filter="all">All</button>
+                    <button class="filter-btn" type="button" data-filter="pending">Pending</button>
+                    <button class="filter-btn" type="button" data-filter="completed">Completed</button>
+                </div>
+
+                <label class="search-box" for="searchInput">
+                    <span aria-hidden="true">🔎</span>
+                    <input type="search" id="searchInput" placeholder="Search tasks..." autocomplete="off">
+                </label>
+            </div>
+
+            <ul id="taskList" class="task-list" aria-live="polite"></ul>
+
+            <p id="emptyState" class="empty-state">
+                No tasks yet. Add your first task above.
+            </p>
         </section>
 
-        <section id="stats">
-            <h2>Stats</h2>
+        <section class="panel stats-panel" aria-labelledby="statsTitle">
+            <div class="section-heading">
+                <div>
+                    <p class="section-label">PROGRESS</p>
+                    <h2 id="statsTitle">Your Statistics</h2>
+                </div>
+            </div>
+
             <div class="stats-container">
-                <div class="card">
-                    <h3>Total</h3>
-                    <p id="totalTasks">0</p>
+                <div class="stat-card">
+                    <span class="stat-label">Total</span>
+                    <strong id="totalTasks">0</strong>
                 </div>
-                <div class="card">
-                    <h3>Done</h3>
-                    <p id="completedTasks">0</p>
+                <div class="stat-card">
+                    <span class="stat-label">Completed</span>
+                    <strong id="completedTasks">0</strong>
                 </div>
-                <div class="card">
-                    <h3>Progress</h3>
-                    <p id="progressPercent">0%</p>
+                <div class="stat-card">
+                    <span class="stat-label">Pending</span>
+                    <strong id="pendingTasks">0</strong>
                 </div>
             </div>
 
-            <div class="progress-bar">
-                <div id="progressFill"></div>
+            <div class="progress-section">
+                <div class="progress-heading">
+                    <span>Completion</span>
+                    <strong id="progressPercent">0%</strong>
+                </div>
+                <div class="progress-bar" aria-label="Task completion progress">
+                    <div id="progressFill"></div>
+                </div>
             </div>
         </section>
 
-        <section id="widgets">
-            <h2>Widgets</h2>
-            <div id="weatherBox">
-                <p id="weatherText">Loading weather...</p>
-            </div>
+        <section class="panel tips-panel" aria-labelledby="tipsTitle">
+            <p class="section-label">PRODUCTIVITY TIP</p>
+            <h2 id="tipsTitle">Focus on one task at a time.</h2>
+            <p>Break larger work into small tasks and complete them one by one.</p>
         </section>
     </main>
+
+    <footer class="footer">
+        <p>Built with HTML, CSS, JavaScript &amp; LocalStorage</p>
+    </footer>
+
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

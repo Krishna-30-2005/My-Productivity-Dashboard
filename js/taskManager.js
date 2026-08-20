@@ -3,7 +3,7 @@ import { saveTasks } from "./storage.js";
 export let tasks = [];
 
 export function setTasks(newTasks) {
-    tasks = newTasks;
+    tasks = Array.isArray(newTasks) ? newTasks : [];
 }
 
 export function addTask(text) {
@@ -21,6 +21,16 @@ export function toggleTask(id) {
     tasks = tasks.map(task =>
         task.id === id
             ? { ...task, completed: !task.completed }
+            : task
+    );
+
+    saveTasks(tasks);
+}
+
+export function updateTask(id, newText) {
+    tasks = tasks.map(task =>
+        task.id === id
+            ? { ...task, text: newText }
             : task
     );
 

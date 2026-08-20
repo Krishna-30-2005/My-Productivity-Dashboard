@@ -1,131 +1,240 @@
-import { loadTasks } from "./storage.js";
-import { tasks, setTasks, addTask, toggleTask, deleteTask } from "./taskManager.js";
+import { loadTasks, saveTasks } from "./storage.js";
+import {
+    tasks,
+    setTasks,
+    addTask,
+    toggleTask,
+    deleteTask,
+    updateTask
+} from "./taskManager.js";
 import { getStats } from "./stats.js";
-import { getWeather } from "./weather.js";
 
-// DOM elements
+const taskForm = document.getElementById("taskForm");
 const taskInput = document.getElementById("taskInput");
-const addTaskBtn = document.getElementById("addTaskBtn");
 const taskList = document.getElementById("taskList");
+const emptyState = document.getElementById("emptyState");
+const searchInput = document.getElementById("searchInput");
+const filterButtons = document.querySelectorAll(".filter-btn");
 
 const totalEl = document.getElementById("totalTasks");
 const completedEl = document.getElementById("completedTasks");
+const pendingEl = document.getElementById("pendingTasks");
 const percentEl = document.getElementById("progressPercent");
-const weatherEl = document.getElementById("weatherText");
-
 const progressFill = document.getElementById("progressFill");
+const taskCountLabel = document.getElementById("taskCountLabel");
 
 const toggleBtn = document.getElementById("themeToggle");
+const greetingEl = document.getElementById("greeting");
+const dateEl = document.getElementById("date");
 
-// Load tasks on start
+let currentFilter = "all";
+
 setTasks(loadTasks());
-renderTasks();
-updateStats();
+loadTheme();
+loadGreeting();
+render();
 
-// Add task
-addTaskBtn.addEventListener("click", () => {
+taskForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+
     const text = taskInput.value.trim();
-    if (!text) return;
+
+    if (!text) {
+        taskInput.focus();
+        return;
+    }
 
     addTask(text);
-    renderTasks();
-    updateStats();
     taskInput.value = "";
+    taskInput.focus();
+    render();
 });
 
-// Render function
-function renderTasks() {
-    taskList.innerHTML = "";
+filterButtons.forEach(button => {
+    button.addEventListener("click", () => {
+        currentFilter = button.dataset.filter;
 
-    tasks.forEach(task => {
-        const li = document.createElement("li");
-        li.classList.add("task-item");
+        filterButtons.forEach(item => {
+            item.classList.toggle("active", item === button);
+        });
 
-        li.innerHTML = `
-            <span style="text-decoration: ${task.completed ? 'line-through' : 'none'}">
-                ${task.text}
-            </span>
-            <div>
-                <button onclick="window.toggleTask(${task.id})">✔</button>
-                <button onclick="window.deleteTask(${task.id})">❌</button>
-            </div>
-        `;
-
-        taskList.appendChild(li);
+        renderTasks();
     });
+});
+
+searchInput.addEventListener("input", renderTasks);
+
+taskList.addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+
+    if (!button) return;
+
+    const id = Number(button.dataset.id);
+    const action = button.dataset.action;
+
+    if (action === "toggle") {
+        toggleTask(id);
+    } else if (action === "delete") {
+        deleteTask(id);
+    }
+
+    render();
+});
+
+toggleBtn.addEventListener("click", () => {
+    const isDark = document.body.classList.toggle("dark");
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+    toggleBtn.textContent = isDark ? "☀️" : "🌙";
+    toggleBtn.setAttribute(
+        "aria-label",
+        isDark ? "Switch to light mode" : "Switch to dark mode"
+    );
+});
+
+function render() {
+    renderTasks();
+    updateStats();
 }
 
-// Make functions global (temporary fix)
-window.toggleTask = (id) => {
-    toggleTask(id);
-    renderTasks();
-    updateStats();
-};
+function renderTasks() {
+    const searchTerm = searchInput.value.trim().toLowerCase();
 
-window.deleteTask = (id) => {
-    deleteTask(id);
-    renderTasks();
-    updateStats();
-};
+    const visibleTasks = tasks.filter(task => {
+        const matchesFilter =
+            currentFilter === "all" ||
+            (currentFilter === "pending" && !task.completed) ||
+            (currentFilter === "completed" && task.completed);
+
+        const matchesSearch =
+            task.text.toLowerCase().includes(searchTerm);
+
+        return matchesFilter && matchesSearch;
+    });
+
+    taskList.innerHTML = "";
+
+    visibleTasks.forEach(task => {
+        const li = document.createElement("li");
+        li.className = `task-item ${task.completed ? "completed" : ""}`;
+
+        const content = document.createElement("div");
+        content.className = "task-content";
+
+        const text = document.createElement("span");
+        text.className = "task-text";
+        text.textContent = task.text;
+
+        content.appendChild(text);
+
+        const actions = document.createElement("div");
+        actions.className = "task-actions";
+
+        const completeButton = document.createElement("button");
+        completeButton.className = "task-action complete-btn";
+        completeButton.type = "button";
+        completeButton.dataset.action = "toggle";
+        completeButton.dataset.id = task.id;
+        completeButton.textContent = task.completed ? "↩" : "✓";
+        completeButton.title = task.completed ? "Mark as pending" : "Mark as completed";
+        completeButton.setAttribute(
+            "aria-label",
+            task.completed ? "Mark task as pending" : "Mark task as completed"
+        );
+
+        const editButton = document.createElement("button");
+        editButton.className = "task-action";
+        editButton.type = "button";
+        editButton.dataset.action = "edit";
+        editButton.dataset.id = task.id;
+        editButton.textContent = "✎";
+        editButton.title = "Edit task";
+        editButton.setAttribute("aria-label", "Edit task");
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "task-action delete-btn";
+        deleteButton.type = "button";
+        deleteButton.dataset.action = "delete";
+        deleteButton.dataset.id = task.id;
+        deleteButton.textContent = "×";
+        deleteButton.title = "Delete task";
+        deleteButton.setAttribute("aria-label", "Delete task");
+
+        actions.append(completeButton, editButton, deleteButton);
+        li.append(content, actions);
+        taskList.appendChild(li);
+    });
+
+    emptyState.hidden = visibleTasks.length !== 0;
+
+    if (tasks.length === 0) {
+        emptyState.textContent = "No tasks yet. Add your first task above.";
+    } else if (visibleTasks.length === 0) {
+        emptyState.textContent = "No tasks match your current filter or search.";
+    }
+}
+
+taskList.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-action='edit']");
+
+    if (!button) return;
+
+    const id = Number(button.dataset.id);
+    const task = tasks.find(item => item.id === id);
+
+    if (!task) return;
+
+    const newText = prompt("Edit task:", task.text);
+    if (newText === null) return;
+
+    const trimmedText = newText.trim();
+
+    if (!trimmedText) return;
+
+    updateTask(id, trimmedText);
+    render();
+});
 
 function updateStats() {
     const stats = getStats(tasks);
 
     totalEl.textContent = stats.total;
     completedEl.textContent = stats.completed;
-    percentEl.textContent = stats.percentage + "%";
+    pendingEl.textContent = stats.pending;
+    percentEl.textContent = `${stats.percentage}%`;
+    progressFill.style.width = `${stats.percentage}%`;
 
-    progressFill.style.width = stats.percentage + "%";
+    taskCountLabel.textContent =
+        `${stats.total} ${stats.total === 1 ? "task" : "tasks"}`;
 }
-
-async function loadWeather() {
-    console.log("Weather function started");
-    const weather = await getWeather("Chennai");
-
-    if (!weather) {
-        weatherEl.textContent = "Failed to load weather";
-        return;
-    }
-
-    weatherEl.textContent = 
-        `${weather.city}: ${weather.temp}°C, ${weather.condition}`;
-}
-
-loadWeather();
-
-toggleBtn.addEventListener("click", () => {
-    document.body.classList.toggle("dark");
-
-    const isDark = document.body.classList.contains("dark");
-
-    localStorage.setItem("theme", isDark ? "dark" : "light");
-});
 
 function loadTheme() {
     const savedTheme = localStorage.getItem("theme");
+    const isDark = savedTheme === "dark";
 
-    if (savedTheme === "dark") {
-        document.body.classList.add("dark");
-    }
+    document.body.classList.toggle("dark", isDark);
+    toggleBtn.textContent = isDark ? "☀️" : "🌙";
+    toggleBtn.setAttribute(
+        "aria-label",
+        isDark ? "Switch to light mode" : "Switch to dark mode"
+    );
 }
 
-loadTheme();
-
 function loadGreeting() {
-    const greetingEl = document.getElementById("greeting");
-    const dateEl = document.getElementById("date");
-
     const now = new Date();
     const hours = now.getHours();
 
-    let greeting = "Hello";
+    if (hours < 12) {
+        greetingEl.textContent = "Good Morning ☀️";
+    } else if (hours < 18) {
+        greetingEl.textContent = "Good Afternoon 🌤️";
+    } else {
+        greetingEl.textContent = "Good Evening 🌙";
+    }
 
-    if (hours < 12) greeting = "Good Morning ☀️";
-    else if (hours < 18) greeting = "Good Afternoon 🌤";
-    else greeting = "Good Evening 🌙";
-
-    greetingEl.textContent = greeting;
-    dateEl.textContent = now.toDateString();
+    dateEl.textContent = now.toLocaleDateString(undefined, {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+    });
 }
-
-loadGreeting();
